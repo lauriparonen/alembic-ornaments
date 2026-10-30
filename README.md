@@ -87,6 +87,17 @@ the same family of motifs. `scale` sets how heavy it is, from
 `FRAME_SCALE_MIN` (0.6) to `FRAME_SCALE_MAX` (1.6). It changes the weight, not
 the variation.
 
+To keep content clear of the frame, `frameInset` says how far in it has to
+start, as fractions of the box:
+
+```ts
+import { frameInset } from '@lauriparonen/alembic-ornaments'
+
+const { x, y } = frameInset('border', 4 / 5)
+// x of the width on the left and right, y of the height top and bottom
+content.style.cssText = `position: absolute; inset: ${y * 100}% ${x * 100}%`
+```
+
 ## Storing ornaments
 
 Store the params, not the SVG:
@@ -120,7 +131,7 @@ server and hydrate on the client, the React components handle this for you.
 | `generateOrnament(params)` | `{ params, svg, width, height }` for `{ preset, seed }`. Results are cached. |
 | `generateFrame(params, aspect)` | The same for a frame `{ preset, seed, scale? }`, drawn to `aspect` (width ÷ height). |
 | `ornamentOutline(params)` | The ornament's ink as polygons in its own `width × height` box, for flowing text around it. |
-| `frameClearance(preset, aspect, scale?)` | How far text must stay in from a frame's edge, as `{ padH, padV }` percentages. |
+| `frameInset(preset, aspect, scale?)` | How far content must stay in from a frame's edges: `{ x, y }` as fractions of the box's width and height. |
 | `normalizeParams(input)` | Coerces anything into valid `OrnamentParams`. |
 | `normalizeFrame(input)` | Coerces into valid `FrameParams`, or `null` for an unknown frame. |
 | `normalizeFrameScale(scale)` | Clamps a scale to the allowed range, in steps of 0.05. |

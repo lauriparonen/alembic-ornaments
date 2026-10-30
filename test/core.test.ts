@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, frameClearance, generateFrame, generateOrnament, normalizeFrame, normalizeParams, PRESETS } from '../src/index.js'
+import { FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, frameInset, generateFrame, generateOrnament, normalizeFrame, normalizeParams, PRESETS } from '../src/index.js'
 import { createRng } from '../src/internal/rng.js'
 import { composePreset } from '../src/internal/presets.js'
 import { render } from '../src/internal/render.js'
@@ -60,7 +60,7 @@ describe('ornament generator', () => {
 describe('frames', () => {
   const aspects = [1, 4 / 5, 9 / 16, 16 / 9, 3 / 4]
 
-  it('draw well-formed ink at every card proportion', () => {
+  it('draw well-formed ink at every box proportion', () => {
     for (const f of FRAMES) {
       for (const aspect of aspects) {
         for (const seed of [1, 2, 3]) {
@@ -71,6 +71,18 @@ describe('frames', () => {
           const ids = [...o.svg.matchAll(/id="([^"]+)"/g)].map((m) => m[1])
           for (const m of o.svg.matchAll(/(?:href="#|url\(#)([^")]+)/g)) expect(ids).toContain(m[1])
         }
+      }
+    }
+  })
+
+  it('insets content by the same distance on every side', () => {
+    for (const f of FRAMES) {
+      for (const aspect of aspects) {
+        const { x, y } = frameInset(f.id, aspect)
+        expect(x * aspect).toBeCloseTo(y, 10)
+        expect(x).toBeGreaterThan(0)
+        expect(x).toBeLessThan(0.5)
+        expect(y).toBeLessThan(0.5)
       }
     }
   })
@@ -93,19 +105,19 @@ describe('frames', () => {
     expect(generateFrame({ preset: 'border', seed: 1 }, 1).svg).toBe(generateFrame({ preset: 'border', seed: 1, scale: 1 }, 1).svg)
   })
 
-  it('draws heavier frames at higher weights, at the same card proportion', () => {
+  it('draws heavier frames at higher weights, at the same box proportion', () => {
     for (const f of FRAMES) {
       for (const scale of [FRAME_SCALE_MIN, 1, FRAME_SCALE_MAX]) {
         const o = generateFrame({ preset: f.id, seed: 2, scale }, 4 / 5)
         expect(o.svg).not.toMatch(/NaN|Infinity|undefined/)
         expect(o.width / o.height).toBeCloseTo(4 / 5, 3)
       }
-      const light = frameClearance(f.id, 4 / 5, FRAME_SCALE_MIN)
-      const natural = frameClearance(f.id, 4 / 5)
-      const heavy = frameClearance(f.id, 4 / 5, FRAME_SCALE_MAX)
-      expect(light.padH).toBeLessThan(natural.padH)
-      expect(heavy.padH).toBeGreaterThan(natural.padH)
-      expect(heavy.padV).toBeGreaterThan(natural.padV)
+      const light = frameInset(f.id, 4 / 5, FRAME_SCALE_MIN)
+      const natural = frameInset(f.id, 4 / 5)
+      const heavy = frameInset(f.id, 4 / 5, FRAME_SCALE_MAX)
+      expect(light.x).toBeLessThan(natural.x)
+      expect(heavy.x).toBeGreaterThan(natural.x)
+      expect(heavy.y).toBeGreaterThan(natural.y)
     }
   })
 })

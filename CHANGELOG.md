@@ -6,5 +6,5 @@ First release, extracted from [Alembic](https://alembic.space).
 
 - `generateOrnament` with four presets: `vine`, `frieze`, `garland`, `sprig`
 - `generateFrame` with three frames: `border`, `block`, `corners`
-- `ornamentOutline` and `frameClearance` for flowing text around ornaments
+- `ornamentOutline` and `frameInset` for keeping text clear of ornaments and frames
 - React components: `<Ornament>`, `<OrnamentFrame>`, `<OrnamentArt>`

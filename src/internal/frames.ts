@@ -9,7 +9,7 @@ import { Sketch } from './sketch.js'
 
 /**
  * Frames: the same woodcut vocabulary as the presets, laid round a page.
- * A frame is drawn to the card's proportions, so it's generated per aspect.
+ * A frame is drawn to its box's proportions, so it's generated per aspect.
  */
 
 export type FramePreset = 'border' | 'block' | 'corners'
@@ -36,7 +36,7 @@ export const FRAME_SCALE_MAX = 1.6
 /**
  * The page a frame is drawn on. Its parts are sized in fixed units, so
  * scale works by changing the page instead: drawn on a smaller page and
- * stretched to the card, every band, flower and rule comes out heavier,
+ * stretched to the box, every band, flower and rule comes out heavier,
  * all in proportion.
  */
 export function frameSize(aspect: number, scale = 1): { W: number; H: number } {
@@ -57,14 +57,15 @@ function metrics(preset: FramePreset) {
 }
 
 /**
- * Padding a frame needs, in the card's own terms (see usePretextResize):
- * horizontal padding insets 2×padH % of the width; vertical padV % of the
- * height plus padV % of the width.
+ * How far in from each edge content has to start to clear a frame, as
+ * fractions of the box: x of its width (left and right), y of its height
+ * (top and bottom). The distance is the same on all four sides, so for a
+ * box w × h, x·w === y·h.
  */
-export function frameClearance(preset: FramePreset, aspect: number, scale = 1): { padH: number; padV: number } {
+export function frameInset(preset: FramePreset, aspect: number, scale = 1): { x: number; y: number } {
   const { W, H } = frameSize(aspect, scale)
   const { clear } = metrics(preset)
-  return { padH: (50 * clear) / W, padV: (100 * clear) / (H + W) }
+  return { x: clear / W, y: clear / H }
 }
 
 /* ------------------------------------------------------------------ bands */

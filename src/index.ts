@@ -95,7 +95,7 @@ export function ornamentOutline(input: Partial<OrnamentParams>): { polys: Vec[][
 
 /* ------------------------------------------------------------------ frames */
 
-export { FRAMES, frameClearance, FRAME_SCALE_MIN, FRAME_SCALE_MAX, type FrameInfo, type FramePreset } from './internal/frames.js'
+export { FRAMES, frameInset, FRAME_SCALE_MIN, FRAME_SCALE_MAX, type FrameInfo, type FramePreset } from './internal/frames.js'
 
 export interface FrameParams {
   preset: FramePreset
@@ -126,8 +126,8 @@ export function normalizeFrame(p: Partial<FrameParams> | null | undefined): Requ
 }
 
 /**
- * Draws a frame for a card of the given width ÷ height. Same seed, same
- * flowers and leaves as the presets; only the layout follows the card. The
+ * Draws a frame for a box of the given width ÷ height. Same seed, same
+ * flowers and leaves as the presets; only the layout follows the box. The
  * scale changes the weight, not the variation.
  */
 export function generateFrame(input: FrameParams, aspect: number): Frame {

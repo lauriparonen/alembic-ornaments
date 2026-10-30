@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { FRAMES, frameClearance, generateFrame, generateOrnament, ornamentOutline, PRESETS } from '../src/index.js'
+import { FRAMES, frameInset, generateFrame, generateOrnament, ornamentOutline, PRESETS } from '../src/index.js'
 
 /**
  * Documents store an ornament as a preset and a seed, and redraw it on
@@ -42,9 +42,9 @@ describe('ornament drawings stay put', () => {
     expect(out).toMatchSnapshot()
   })
 
-  it('frame clearances', () => {
-    const out: Record<string, { padH: number; padV: number }> = {}
-    for (const f of FRAMES) for (const aspect of ASPECTS) for (const scale of SCALES) out[`${f.id}:${aspect.toFixed(3)}:${scale}`] = frameClearance(f.id, aspect, scale)
+  it('frame insets', () => {
+    const out: Record<string, { x: number; y: number }> = {}
+    for (const f of FRAMES) for (const aspect of ASPECTS) for (const scale of SCALES) out[`${f.id}:${aspect.toFixed(3)}:${scale}`] = frameInset(f.id, aspect, scale)
     expect(out).toMatchSnapshot()
   })
 
