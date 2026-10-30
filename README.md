@@ -49,6 +49,9 @@ follows, with more vine along a longer side rather than a stretched one.
 - The frame takes the text colour around it. `color` inks the frame alone,
   leaving your content's text as it is.
 - Any other `div` props (`className`, `style`, `onClick`…) pass through.
+- The frame is drawn on a layer inside the box, before your content. Rules
+  aimed at the box's children can't move or resize it, but ones that count
+  position do count it: aim `:first-child` at your content instead.
 
 On the server the box has no size yet, so the frame appears when the page
 hydrates. The padding is there from the start, so nothing moves.
