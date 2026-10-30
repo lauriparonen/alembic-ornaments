@@ -27,6 +27,14 @@ describe('react components', () => {
     expect(container.querySelector('svg')).not.toBeNull()
   })
 
+  it('inherits the text colour unless given one', () => {
+    const plain = render(<Ornament preset="vine" seed={1} />).container.firstElementChild as HTMLElement
+    expect(plain.style.color).toBe('')
+    cleanup()
+    const inked = render(<Ornament preset="vine" seed={1} color="rebeccapurple" style={{ color: 'red' }} />).container.firstElementChild as HTMLElement
+    expect(inked.style.color).toBe('rebeccapurple')
+  })
+
   it('swaps in new art when the drawing changes', () => {
     const a = generateOrnament({ preset: 'vine', seed: 1 }).svg
     const b = generateOrnament({ preset: 'vine', seed: 2 }).svg
@@ -89,6 +97,21 @@ describe('<Framed>', () => {
     const box = container.firstElementChild as HTMLElement
     expect(box.style.position).toBe('absolute')
     expect(box.style.color).toBe('red')
+  })
+
+  it('keeps the frame layer to the box, whatever the box does to its children', () => {
+    const { container } = render(<Framed preset="border" seed={1}>x</Framed>)
+    const layer = container.querySelector('[aria-hidden]') as HTMLElement
+    expect(layer.style.inset).toBe('0px')
+    expect(layer.style.maxWidth).toBe('none')
+    expect(layer.style.margin).toBe('0px')
+  })
+
+  it('inks the frame alone, leaving the content its own colour', () => {
+    const { container } = render(<Framed preset="border" seed={1} color="darkred">x</Framed>)
+    const box = container.firstElementChild as HTMLElement
+    expect(box.style.color).toBe('')
+    expect((box.querySelector('[aria-hidden]') as HTMLElement).style.color).toBe('darkred')
   })
 
   it('renders on the server with its padding and no frame yet', () => {

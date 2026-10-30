@@ -16,7 +16,7 @@ Made for [Alembic](https://alembic.space). Try every preset and seed in the
 - **Tiny and dependency-free.** Pure TypeScript that runs anywhere: browser, Node, edge, build time.
 - **Deterministic.** `{ preset, seed }` is the whole ornament.
 - **Fits any box.** Wrap a component in `<Framed>` and the frame measures it, fits it and follows it as it resizes.
-- **Ink-agnostic.** Drawn in `currentColor`, so it takes the colour of the text around it.
+- **Ink-agnostic.** Drawn in `currentColor`, so it takes the colour of the text around it, or any `color` you give it.
 - **React components** included, optional.
 
 ```sh
@@ -46,7 +46,8 @@ follows, with more vine along a longer side rather than a stretched one.
   size asked for gives the frame at most 30% of its shorter side.
 - The padding belongs to the frame. Put any padding of your own on the
   content inside.
-- It takes the text colour: set `color` to tint it.
+- The frame takes the text colour around it. `color` inks the frame alone,
+  leaving your content's text as it is.
 - Any other `div` props (`className`, `style`, `onClick`…) pass through.
 
 On the server the box has no size yet, so the frame appears when the page
@@ -184,9 +185,9 @@ SVG for the same params, so markup rendered on the server hydrates cleanly.
 
 | | |
 |---|---|
-| `<Framed preset seed size? clear? …divProps>` | A box with a frame fitted round its children, whatever its size. |
-| `<Ornament preset seed className? style? />` | An ornament at its natural proportions. |
-| `<OrnamentFrame preset seed scale? aspect className? style? />` | A proportional frame drawn to `aspect`, filling its box. |
+| `<Framed preset seed size? clear? color? …divProps>` | A box with a frame fitted round its children, whatever its size. |
+| `<Ornament preset seed color? className? style? />` | An ornament at its natural proportions. |
+| `<OrnamentFrame preset seed scale? aspect color? className? style? />` | A proportional frame drawn to `aspect`, filling its box. |
 | `<OrnamentArt svg className? style? />` | Low-level: renders any generated SVG string, sized by its box. |
 
 The drawings render in a `<div aria-hidden>`, since ornaments are decoration.
