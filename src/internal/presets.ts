@@ -3,6 +3,7 @@ import { fromPolyline } from './grow.js'
 import { bud, leaf, rosette, tulip, type LeafKind } from './motifs.js'
 import type { Rng } from './rng.js'
 import { Sketch, type Shape } from './sketch.js'
+import { atan, atan2, cos, hypot, pow, sin } from './math.js'
 
 /**
  * The presets. Each is an authored composition — where the stem runs, where
@@ -160,18 +161,18 @@ export function volute(
   for (let i = 0; i <= steps; i++) {
     const u = i / steps
     const phi = phi0 + dir * u * turns * 2 * Math.PI
-    const rho = r0 * Math.pow(r1 / r0, u)
-    spiral.push({ x: center.x + rho * Math.cos(phi), y: center.y + rho * Math.sin(phi) })
+    const rho = r0 * pow(r1 / r0, u)
+    spiral.push({ x: center.x + rho * cos(phi), y: center.y + rho * sin(phi) })
   }
   const p0 = spiral[0]
-  const d = Math.hypot(p0.x - start.x, p0.y - start.y)
+  const d = hypot(p0.x - start.x, p0.y - start.y)
   const c1 = add(start, polar(heading, d * 0.4))
   // Clockwise, the tangent at angle φ points along φ + π/2.
   const c2 = add(p0, polar(phi0 - Math.PI / 2, Math.min(d * 0.4, r0 * 1.3)))
   const leadSteps = Math.max(8, Math.ceil(d * 1.2))
   for (let i = 0; i < leadSteps; i++) {
     const t = i / leadSteps
-    const a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, c = 3 * (1 - t) * t * t, e = t ** 3
+    const a = pow(1 - t, 3), b = 3 * (1 - t) * (1 - t) * t, c = 3 * (1 - t) * t * t, e = pow(t, 3)
     pts.push({ x: a * start.x + b * c1.x + c * c2.x + e * p0.x, y: a * start.y + b * c1.y + c * c2.y + e * p0.y })
   }
   pts.push(...spiral)
@@ -183,13 +184,13 @@ export function volute(
   let carry = 0
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1], b = pts[i]
-    let seg = Math.hypot(b.x - a.x, b.y - a.y)
+    let seg = hypot(b.x - a.x, b.y - a.y)
     let from = a
     while (carry + seg >= 1) {
       const k = (1 - carry) / seg
       from = { x: from.x + (b.x - from.x) * k, y: from.y + (b.y - from.y) * k }
       even.push(from)
-      seg = Math.hypot(b.x - from.x, b.y - from.y)
+      seg = hypot(b.x - from.x, b.y - from.y)
       carry = 0
     }
     carry += seg
@@ -198,10 +199,10 @@ export function volute(
   const widths = even.map((_, i) => width(i / (n - 1)))
   const headings = even.map((p, i) => {
     const a = even[Math.max(0, i - 1)], b = even[Math.min(n - 1, i + 1)]
-    return Math.atan2(b.y - a.y, b.x - a.x)
+    return atan2(b.y - a.y, b.x - a.x)
   })
   for (let i = 0; i < n; i++) {
-    if (Math.hypot(even[i].x - start.x, even[i].y - start.y) < launch) continue
+    if (hypot(even[i].x - start.x, even[i].y - start.y) < launch) continue
     if (!sketch.free(even[i], Math.max(0.6, widths[i]))) { (globalThis as any).DBG?.(i, n, even[i], sketch.inBounds(even[i], widths[i])); return null }
   }
   const owner = sketch.newOwner()
@@ -219,8 +220,8 @@ export function volute(
  * the stem is this one glide-reflected, which is how a rinceau repeats.
  */
 export function vineCell(rng: Rng, ch: Character, T: number, cy: number, A: number, top: number, stemW: number, gap: number): Shape[] {
-  const stemY = (x: number) => cy - A * Math.cos((2 * Math.PI * x) / T)
-  const slope = (x: number) => Math.atan(A * (2 * Math.PI / T) * Math.sin((2 * Math.PI * x) / T))
+  const stemY = (x: number) => cy - A * cos((2 * Math.PI * x) / T)
+  const slope = (x: number) => atan(A * (2 * Math.PI / T) * sin((2 * Math.PI * x) / T))
   const sketch = new Sketch({
     rng,
     gap,
@@ -251,7 +252,7 @@ export function vineCell(rng: Rng, ch: Character, T: number, cy: number, A: numb
     const center = { x: cx, y: floor - w - gap / 2 - r0 }
     branch = sketch.ignoring(stem.owner, () => volute(
       sketch, start, slope(x0) - lean, center, r0, r0 * close, turns,
-      (t) => w * (1 - 0.45 * Math.pow(t, 1.5)), (stemW + w + gap) * 3,
+      (t) => w * (1 - 0.45 * pow(t, 1.5)), (stemW + w + gap) * 3,
     ))
     if (branch) {
       eye = center
@@ -314,7 +315,7 @@ function vine(rng: Rng, ch: Character, reversed: boolean): Composition {
     b.place(cell, { a: 1, b: 0, c: 0, d: -1, e: x + T / 2, f: 2 * cy })
   }
   const stem: Vec[] = []
-  for (let x = -4; x <= W + 4; x += 1) stem.push({ x, y: cy - A * Math.cos((2 * Math.PI * (x - xc)) / T) })
+  for (let x = -4; x <= W + 4; x += 1) stem.push({ x, y: cy - A * cos((2 * Math.PI * (x - xc)) / T) })
   const s = new Sketch({ rng, gap, weight: 1, inBounds: () => true })
   s.line(stem, stem.map(() => stemW))
   b.place(b.part(s.shapes))
@@ -344,7 +345,7 @@ export function foliate(sketch: Sketch, ch: Character, strokes: Stroke[], sizes:
     let travelled = 0
     let next = step * 0.5
     for (let i = 1; i < n; i++) {
-      travelled += Math.hypot(st.points[i].x - st.points[i - 1].x, st.points[i].y - st.points[i - 1].y)
+      travelled += hypot(st.points[i].x - st.points[i - 1].x, st.points[i].y - st.points[i - 1].y)
       const u = i / (n - 1)
       if (u < from || u > to || travelled < next) continue
       next = travelled + step
@@ -399,7 +400,7 @@ function symmetric(
     const r0 = arm.r0 * f
     const close = rng.range(0.72, 0.8)
     const main = volute(sketch, arm.root, arm.heading, arm.center, r0, r0 * close, rng.range(0.85, 0.95),
-      (t) => w * (1.15 - 0.6 * Math.pow(t, 1.3)), w * 6)
+      (t) => w * (1.15 - 0.6 * pow(t, 1.3)), w * 6)
     if (main) {
       strokes.push(main)
       eyes.push({ p: arm.center, r: r0 * close - w * 0.5 - gap * 0.7 })
@@ -418,7 +419,7 @@ function symmetric(
       // Only the launch may touch the arm it springs from; past that, the
       // fit check sees the arm like any other ink.
       const br = volute(sketch, main.points[i], main.headings[i] + (b.flip ? b.peel : -b.peel), center, r0, r0 * close,
-        rng.range(0.8, 0.9), (t) => bw * (1 - 0.45 * Math.pow(t, 1.3)), (main.widths[i] + bw + gap) * 3, b.flip)
+        rng.range(0.8, 0.9), (t) => bw * (1 - 0.45 * pow(t, 1.3)), (main.widths[i] + bw + gap) * 3, b.flip)
       if (br) {
         strokes.push(br)
         eyes.push({ p: center, r: r0 * close - bw * 0.5 - gap * 0.7 })

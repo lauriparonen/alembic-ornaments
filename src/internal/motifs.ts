@@ -1,5 +1,6 @@
 import { add, circle, polar, ribbon, type Poly, type Vec } from './geometry.js'
 import type { Sketch } from './sketch.js'
+import { pow, sin } from './math.js'
 
 /**
  * Woodcut motifs. Everything is a black mass with white cut into it — a
@@ -39,7 +40,7 @@ function clear(sketch: Sketch, points: Vec[], radii: number[], skip: number): bo
 function slit(sketch: Sketch, s: Spine, from: number, to: number, width: number): void {
   const pts = s.points.slice(from, to + 1)
   if (pts.length < 3 || width < 0.35) return
-  sketch.hole(ribbon(pts, pts.map((_, i) => width * Math.sin(Math.PI * (i / (pts.length - 1))))))
+  sketch.hole(ribbon(pts, pts.map((_, i) => width * sin(Math.PI * (i / (pts.length - 1))))))
 }
 
 /* ------------------------------------------------------------------ leaves */
@@ -64,12 +65,12 @@ export function leaf(sketch: Sketch, spec: LeafSpec, check = true): boolean {
   for (let i = 0; i <= n; i++) {
     const t = i / n
     // Full shoulder a third of the way up, a long drawn point.
-    const body = W * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.62)), 0.9)
+    const body = W * pow(sin(Math.PI * pow(t, 0.62)), 0.9)
     if (spec.kind === 'acanthus') {
       // Lobes that sweep forward to points, offset on each side.
       const lobe = (u: number) => {
         const f = ((u % 1) + 1) % 1
-        return f < 0.78 ? Math.pow(f / 0.78, 0.55) : (1 - f) / 0.22
+        return f < 0.78 ? pow(f / 0.78, 0.55) : (1 - f) / 0.22
       }
       const fade = Math.min(1, t * 5) * Math.min(1, (1 - t) * 4)
       left.push(body * (1 - 0.42 * fade * (1 - lobe(t * 3.6 + 0.15))))
@@ -113,8 +114,8 @@ export function rosette(sketch: Sketch, center: Vec, r: number, petals: number, 
     const s = spine(add(center, polar(a, from)), a, to - from, 0, 18)
     const widths = s.points.map((_, i) => {
       const t = i / (s.points.length - 1)
-      const round = Math.sqrt(Math.max(0, Math.sin(Math.PI * Math.pow(t, 0.8))))
-      const pointed = Math.sin(Math.PI * Math.pow(t, 0.7))
+      const round = Math.sqrt(Math.max(0, sin(Math.PI * pow(t, 0.8))))
+      const pointed = sin(Math.PI * pow(t, 0.7))
       return half * (round * (1 - point) + pointed * point)
     })
     sketch.fill(ribbon(s.points, widths))
@@ -167,7 +168,7 @@ export function tulip(sketch: Sketch, base: Vec, heading: number, size: number, 
     for (let i = 0; i <= 14; i++) {
       const u = i / 14
       // Narrow foot, round belly, slight flare to the outer point.
-      const v = 0.08 + 0.36 * Math.sin(Math.PI * Math.min(1, u * 0.78)) + 0.06 * Math.pow(u, 3)
+      const v = 0.08 + 0.36 * sin(Math.PI * Math.min(1, u * 0.78)) + 0.06 * pow(u, 3)
       pts.push(at(u * 0.92, sgn * v))
     }
     return pts
@@ -195,7 +196,7 @@ export function bud(sketch: Sketch, base: Vec, heading: number, size: number, ch
   const s = spine(base, heading, size, 0, 14)
   const widths = s.points.map((_, i) => {
     const t = i / (s.points.length - 1)
-    return size * 0.27 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.6)), 0.85)
+    return size * 0.27 * pow(sin(Math.PI * pow(t, 0.6)), 0.85)
   })
   if (check && !clear(sketch, s.points, widths, 3)) return false
   sketch.fill(ribbon(s.points, widths))

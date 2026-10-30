@@ -1,5 +1,6 @@
 import type { Rng } from './rng.js'
 import { circle, ribbon, type Poly, type Vec } from './geometry.js'
+import { cos, sin } from './math.js'
 
 /**
  * A drawing surface that also remembers where ink already is. Growth checks
@@ -118,7 +119,7 @@ export class Sketch {
         const count = k === 0 ? 1 : Math.ceil((2 * Math.PI * rr) / 5)
         for (let i = 0; i < count; i++) {
           const a = (i / count) * Math.PI * 2
-          this.occ.add({ x: p.x + Math.cos(a) * rr, y: p.y + Math.sin(a) * rr, r: 3 + this.gap / 2, owner })
+          this.occ.add({ x: p.x + cos(a) * rr, y: p.y + sin(a) * rr, r: 3 + this.gap / 2, owner })
         }
       }
       return

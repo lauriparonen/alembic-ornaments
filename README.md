@@ -155,10 +155,12 @@ preset/seed/frame combinations, so a drawing can't change by accident. A
 change to an existing preset's look will be a major version. New presets
 arrive in minor versions.
 
-The promise covers the drawing, not the exact bytes. JavaScript engines can
-disagree in the last bit of a trigonometric result, so Node and a browser may
-emit slightly different numbers for the same ornament. If you render on the
-server and hydrate on the client, the React components handle this for you.
+It holds to the byte, on every engine and CPU. JavaScript's own `Math.sin`
+and friends disagree in the last bit between engines, and even between
+Intel and Apple Silicon, and one bit can decide whether a leaf fits. So the
+generator brings its own trigonometry, built only from arithmetic that IEEE
+754 makes exact everywhere. Node, Chrome, Safari and Firefox emit the same
+SVG for the same params, so markup rendered on the server hydrates cleanly.
 
 ## API
 

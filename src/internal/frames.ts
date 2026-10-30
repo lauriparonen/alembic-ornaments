@@ -6,6 +6,7 @@ import {
 } from './presets.js'
 import type { Rng } from './rng.js'
 import { Sketch } from './sketch.js'
+import { cos, hypot, pow, sin } from './math.js'
 
 /**
  * Frames: the same woodcut vocabulary as the presets, laid round a page.
@@ -121,7 +122,7 @@ function borderInk(b: Builder, rng: Rng, ch: Character, W: number, H: number, o:
     }
     const s = new Sketch({ rng, gap, weight: 1, inBounds: () => true })
     const stem: Vec[] = []
-    for (let x = -2; x <= L + 2; x += 1) stem.push({ x, y: cy - A * Math.cos((2 * Math.PI * x) / T) })
+    for (let x = -2; x <= L + 2; x += 1) stem.push({ x, y: cy - A * cos((2 * Math.PI * x) / T) })
     s.line(stem, stem.map(() => stemW))
     b.place(b.part(s.shapes), IDENTITY, g)
   }
@@ -133,7 +134,7 @@ function borderInk(b: Builder, rng: Rng, ch: Character, W: number, H: number, o:
   rosette(tile, c, rr, ch.petals, rng.range(0, Math.PI), ch.flower, false)
   for (let k = 0; k < 4; k++) {
     const h = Math.PI / 4 + (k * Math.PI) / 2
-    const base = add(c, { x: Math.cos(h) * (rr + gap * 0.6), y: Math.sin(h) * (rr + gap * 0.6) })
+    const base = add(c, { x: cos(h) * (rr + gap * 0.6), y: sin(h) * (rr + gap * 0.6) })
     const len = D * 0.707 - rr - gap * 2.2
     leaf(tile, { base, heading: h, length: len, curve: 0, kind: 'lance' }, false)
   }
@@ -214,7 +215,7 @@ function corners(rng: Rng, ch: Character, aspect: number, scale: number): Compos
     const center = { x: ri + reach - gap * 2 - r0, y: edge + w * 1.5 + r0 }
     const close = rng.range(0.72, 0.8)
     const arm = volute(sketch, root, rng.range(0.15, 0.3), center, r0, r0 * close, rng.range(0.82, 0.92),
-      (t) => w * (1.2 - 0.6 * Math.pow(t, 1.3)), rh + w * 4, false, Math.PI * 1.5)
+      (t) => w * (1.2 - 0.6 * pow(t, 1.3)), rh + w * 4, false, Math.PI * 1.5)
     if (arm) {
       strokes.push(arm)
       eyes.push({ p: center, r: r0 * close - w * 0.5 - gap * 0.7 })
@@ -231,10 +232,10 @@ function corners(rng: Rng, ch: Character, aspect: number, scale: number): Compos
       const r0 = M * 0.055 * f
       const center = { x: p.x + r0 * 0.4, y: p.y + arm.widths[i] + gap * 2.5 + bw + r0 }
       // Never inside the arm's own curl: that's where its flower goes.
-      if (Math.hypot(center.x - eye.p.x, center.y - eye.p.y) < eye.r + r0 + gap * 6) continue
+      if (hypot(center.x - eye.p.x, center.y - eye.p.y) < eye.r + r0 + gap * 6) continue
       const close = rng.range(0.72, 0.8)
       const br = volute(sketch, p, arm.headings[i] + 0.45, center, r0, r0 * close, rng.range(0.8, 0.9),
-        (t) => bw * (1 - 0.45 * Math.pow(t, 1.3)), (arm.widths[i] + bw + gap) * 3, false, 0)
+        (t) => bw * (1 - 0.45 * pow(t, 1.3)), (arm.widths[i] + bw + gap) * 3, false, 0)
       if (br) {
         strokes.push(br)
         eyes.push({ p: center, r: r0 * close - bw * 0.5 - gap * 0.7 })

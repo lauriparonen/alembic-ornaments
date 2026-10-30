@@ -9,8 +9,9 @@ import { fitFrame, FRAMES, frameInset, generateFrame, generateOrnament, ornament
  * different. Fixes are fine, but update the snapshot on purpose, never
  * as a reflex.
  *
- * Hashes are of Node's output. Browsers can differ from Node in the last
- * bit of a trig result, so only the drawing is promised, not the bytes.
+ * The bytes are promised too: the generator does its own trigonometry
+ * (internal/math.ts), so these hashes hold on every engine and CPU. CI
+ * runs them on both x64 and arm64 to keep it that way.
  */
 const hash = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 16)
 

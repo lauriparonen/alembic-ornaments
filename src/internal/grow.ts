@@ -1,5 +1,6 @@
 import { dist, ribbon, type Vec } from './geometry.js'
 import type { Sketch } from './sketch.js'
+import { atan2, cos, pow, sin } from './math.js'
 
 /**
  * Tendrils: curves defined by how their heading changes along their length.
@@ -37,7 +38,7 @@ export function trace(spec: TendrilSpec, step = 1.2): Omit<Tendril, 'owner'> {
   const points: Vec[] = [spec.start]
   const headings: number[] = []
   const widths: number[] = []
-  const heading = (t: number) => spec.heading + spec.bend * t + spec.turn * Math.pow(t, spec.tight + 1)
+  const heading = (t: number) => spec.heading + spec.bend * t + spec.turn * pow(t, spec.tight + 1)
 
   let p = spec.start
   for (let i = 0; i <= n; i++) {
@@ -47,7 +48,7 @@ export function trace(spec: TendrilSpec, step = 1.2): Omit<Tendril, 'owner'> {
     if (i === n) break
     // Midpoint rule keeps tight curls from drifting open.
     const h = heading((i + 0.5) / n)
-    p = { x: p.x + Math.cos(h) * ds, y: p.y + Math.sin(h) * ds }
+    p = { x: p.x + cos(h) * ds, y: p.y + sin(h) * ds }
     points.push(p)
   }
   return { spec, points, headings, widths }
@@ -112,7 +113,7 @@ export function fromPolyline(sketch: Sketch, points: Vec[], widths: number[], dr
   const headings = points.map((p, i) => {
     const a = points[Math.max(0, i - 1)]
     const b = points[Math.min(points.length - 1, i + 1)]
-    return Math.atan2(b.y - a.y, b.x - a.x)
+    return atan2(b.y - a.y, b.x - a.x)
   })
   const owner = sketch.newOwner()
   if (draw) sketch.fill(ribbon(points, widths))

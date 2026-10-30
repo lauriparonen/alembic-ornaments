@@ -3,6 +3,7 @@ import { apply, clamp, type Vec } from './internal/geometry.js'
 import { composePreset, PRESETS, type OrnamentPreset, type PresetInfo, type Rect } from './internal/presets.js'
 import { render } from './internal/render.js'
 import { composeFrame, frameInset, FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, type FrameClear, type FramePreset } from './internal/frames.js'
+import { exp, log } from './internal/math.js'
 
 /**
  * Seeded woodcut ornaments, drawn as SVG. Everything here is pure and has
@@ -188,7 +189,7 @@ export function fitFrame(input: FitFrameParams, width: number, height: number): 
   // The inset grows in proportion to the weight, so one measurement at weight 1 gives the rest.
   const unit = frameInset(base.preset, aspect, 1, input.clear).x * width
   const room = Math.min(size, FIT_MAX_SHARE * Math.min(width, height))
-  const stepped = Math.round(Math.exp(Math.floor(Math.log(room / unit) * 50) / 50) * 1e6) / 1e6
+  const stepped = Math.round(exp(Math.floor(log(room / unit) * 50) / 50) * 1e6) / 1e6
   const scale = Math.max(FIT_SCALE_MIN, stepped)
   return { ...drawFrame({ ...base, scale }, aspect), inset: unit * scale }
 }

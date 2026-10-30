@@ -8,6 +8,8 @@
  * holes where they cross.
  */
 
+import { atan2, cos, hypot, sin } from './math.js'
+
 export interface Vec {
   x: number
   y: number
@@ -19,9 +21,9 @@ export const vec = (x: number, y: number): Vec => ({ x, y })
 export const add = (a: Vec, b: Vec): Vec => ({ x: a.x + b.x, y: a.y + b.y })
 export const sub = (a: Vec, b: Vec): Vec => ({ x: a.x - b.x, y: a.y - b.y })
 export const scale = (a: Vec, s: number): Vec => ({ x: a.x * s, y: a.y * s })
-export const len = (a: Vec): number => Math.hypot(a.x, a.y)
-export const dist = (a: Vec, b: Vec): number => Math.hypot(a.x - b.x, a.y - b.y)
-export const polar = (angle: number, r = 1): Vec => ({ x: Math.cos(angle) * r, y: Math.sin(angle) * r })
+export const len = (a: Vec): number => hypot(a.x, a.y)
+export const dist = (a: Vec, b: Vec): number => hypot(a.x - b.x, a.y - b.y)
+export const polar = (angle: number, r = 1): Vec => ({ x: cos(angle) * r, y: sin(angle) * r })
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 export const clamp = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v))
 
@@ -53,7 +55,7 @@ export function ribbon(points: Vec[], left: number[], right: number[] = left, ro
     const b = points[Math.min(n - 1, i + 1)]
     const dx = b.x - a.x
     const dy = b.y - a.y
-    const d = Math.hypot(dx, dy) || 1
+    const d = hypot(dx, dy) || 1
     const nx = -dy / d
     const ny = dx / d
     l.push({ x: points[i].x + nx * left[i], y: points[i].y + ny * left[i] })
@@ -65,12 +67,12 @@ export function ribbon(points: Vec[], left: number[], right: number[] = left, ro
     // Semicircle from the right edge back round to the left edge.
     const p = points[0]
     const q = points[1]
-    const heading = Math.atan2(q.y - p.y, q.x - p.x)
+    const heading = atan2(q.y - p.y, q.x - p.x)
     const radius = (left[0] + right[0]) / 2
     const steps = 8
     for (let i = 1; i < steps; i++) {
       const a = heading - Math.PI / 2 - (Math.PI * i) / steps
-      outline.push({ x: p.x + Math.cos(a) * radius, y: p.y + Math.sin(a) * radius })
+      outline.push({ x: p.x + cos(a) * radius, y: p.y + sin(a) * radius })
     }
   }
   return outline
@@ -78,14 +80,14 @@ export function ribbon(points: Vec[], left: number[], right: number[] = left, ro
 
 export function ellipse(center: Vec, rx: number, ry: number, rotation = 0, segments = 0): Poly {
   const n = segments || Math.max(12, Math.min(64, Math.round(Math.max(rx, ry) * 2.2)))
-  const cos = Math.cos(rotation)
-  const sin = Math.sin(rotation)
+  const cosR = cos(rotation)
+  const sinR = sin(rotation)
   const out: Poly = []
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2
-    const x = Math.cos(a) * rx
-    const y = Math.sin(a) * ry
-    out.push({ x: center.x + x * cos - y * sin, y: center.y + x * sin + y * cos })
+    const x = cos(a) * rx
+    const y = sin(a) * ry
+    out.push({ x: center.x + x * cosR - y * sinR, y: center.y + x * sinR + y * cosR })
   }
   return out
 }
@@ -120,12 +122,12 @@ export function multiply(m: Matrix, n: Matrix): Matrix {
 }
 
 export const rotation = (angle: number): Matrix => ({
-  a: Math.cos(angle), b: Math.sin(angle), c: -Math.sin(angle), d: Math.cos(angle), e: 0, f: 0,
+  a: cos(angle), b: sin(angle), c: -sin(angle), d: cos(angle), e: 0, f: 0,
 })
 
 /** Reflection across the line through the origin at `angle`. */
 export const reflection = (angle: number): Matrix => ({
-  a: Math.cos(2 * angle), b: Math.sin(2 * angle), c: Math.sin(2 * angle), d: -Math.cos(2 * angle), e: 0, f: 0,
+  a: cos(2 * angle), b: sin(2 * angle), c: sin(2 * angle), d: -cos(2 * angle), e: 0, f: 0,
 })
 
 export const translation = (x: number, y: number): Matrix => ({ a: 1, b: 0, c: 0, d: 1, e: x, f: y })
@@ -152,7 +154,7 @@ export function simplify(points: Vec[], tolerance: number): Vec[] {
       const p = points[i]
       let d: number
       if (l2 === 0) {
-        d = (p.x - a.x) ** 2 + (p.y - a.y) ** 2
+        d = (p.x - a.x) * (p.x - a.x) + (p.y - a.y) * (p.y - a.y)
       } else {
         const cross = dx * (p.y - a.y) - dy * (p.x - a.x)
         d = (cross * cross) / l2
