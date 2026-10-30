@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, frameInset, generateFrame, generateOrnament, normalizeFrame, normalizeParams, PRESETS } from '../src/index.js'
+import { FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, fitFrame, frameInset, generateFrame, generateOrnament, normalizeFrame, normalizeParams, PRESETS } from '../src/index.js'
 import { createRng } from '../src/internal/rng.js'
 import { composePreset } from '../src/internal/presets.js'
 import { render } from '../src/internal/render.js'
@@ -119,6 +119,44 @@ describe('frames', () => {
       expect(heavy.x).toBeGreaterThan(natural.x)
       expect(heavy.y).toBeGreaterThan(natural.y)
     }
+  })
+})
+
+describe('fitted frames', () => {
+  it('take the size asked for at any box size, a hair under, never over', () => {
+    for (const f of FRAMES) {
+      for (const [w, h] of [[300, 200], [1200, 800], [640, 2000], [3000, 400]]) {
+        const fit = fitFrame({ preset: f.id, seed: 1, size: 32 }, w, h)!
+        expect(fit.inset).toBeLessThanOrEqual(32)
+        expect(fit.inset).toBeGreaterThan(32 * 0.97)
+        expect(fit.width / fit.height).toBeCloseTo(w / h, 2)
+        expect(fit.svg).not.toMatch(/NaN|Infinity|undefined/)
+      }
+    }
+  })
+
+  it('agree with frameInset about the room they take', () => {
+    const fit = fitFrame({ preset: 'corners', seed: 3, size: 40 }, 800, 500)!
+    expect(fit.inset).toBeCloseTo(frameInset('corners', 800 / 500, fit.params.scale).x * 800, 6)
+    const edges = fitFrame({ preset: 'corners', seed: 3, size: 40, clear: 'edges' }, 800, 500)!
+    expect(edges.params.scale).toBeGreaterThan(fit.params.scale)
+  })
+
+  it('leave room inside a box too small for them', () => {
+    const fit = fitFrame({ preset: 'border', seed: 1, size: 80 }, 200, 100)!
+    expect(fit.inset).toBeLessThanOrEqual(30)
+  })
+
+  it('snap their weight, so nearby box sizes share a drawing', () => {
+    const a = fitFrame({ preset: 'border', seed: 1, size: 32 }, 800, 600)!
+    const b = fitFrame({ preset: 'border', seed: 1, size: 32 }, 800 * 1.001, 600 * 1.001)!
+    expect(b.params.scale).toBe(a.params.scale)
+  })
+
+  it('refuse boxes with no size', () => {
+    expect(fitFrame({ preset: 'border', seed: 1, size: 32 }, 0, 100)).toBeNull()
+    expect(fitFrame({ preset: 'border', seed: 1, size: 0 }, 100, 100)).toBeNull()
+    expect(fitFrame({ preset: 'border', seed: 1, size: 32 }, NaN, 100)).toBeNull()
   })
 })
 

@@ -15,6 +15,7 @@ Made for [Alembic](https://alembic.space). Try every preset and seed in the
 
 - **Tiny and dependency-free.** Pure TypeScript that runs anywhere: browser, Node, edge, build time.
 - **Deterministic.** `{ preset, seed }` is the whole ornament.
+- **Fits any box.** Wrap a component in `<Framed>` and the frame measures it, fits it and follows it as it resizes.
 - **Ink-agnostic.** Drawn in `currentColor`, so it takes the colour of the text around it.
 - **React components** included, optional.
 
@@ -24,35 +25,59 @@ npm install @lauriparonen/alembic-ornaments
 
 ## Usage
 
-```ts
-import { generateOrnament } from '@lauriparonen/alembic-ornaments'
-
-const { svg, width, height } = generateOrnament({ preset: 'garland', seed: 42 })
-element.innerHTML = svg
-```
-
-`svg` is a complete `<svg>` string with a `viewBox`. Scale it with CSS like
-any other image.
-
-### React
+### A frame round any component
 
 ```tsx
-import { Ornament, OrnamentFrame } from '@lauriparonen/alembic-ornaments/react'
+import { Framed } from '@lauriparonen/alembic-ornaments/react'
 
+<Framed preset="border" seed={4}>
+  <h3>On distillation</h3>
+  <p>A good essay vivifies its writer as much as its reader.</p>
+</Framed>
+```
+
+`<Framed>` is a `div` that measures itself, draws a frame to its exact size
+and pads its children clear of it. Size it however you like (by its content,
+a grid, `width: 100%`, `aspect-ratio`) and resize it freely: the frame
+follows, with more vine along a longer side rather than a stretched one.
+
+- `size` is the room the frame takes on each side, in px (default `32`). It
+  stays the same on a 300px card and a 1200px hero. A box too small for the
+  size asked for gives the frame at most 30% of its shorter side.
+- The padding belongs to the frame. Put any padding of your own on the
+  content inside.
+- It takes the text colour: set `color` to tint it.
+- Any other `div` props (`className`, `style`, `onClick`…) pass through.
+
+On the server the box has no size yet, so the frame appears when the page
+hydrates. The padding is there from the start, so nothing moves.
+
+### Dividers and endpieces
+
+```tsx
+import { Ornament } from '@lauriparonen/alembic-ornaments/react'
+
+<Ornament preset="vine" seed={7} />                       {/* fills the column */}
 <Ornament preset="sprig" seed={11} style={{ width: 120 }} />
-
-<div style={{ position: 'relative', aspectRatio: '4 / 5' }}>
-  <OrnamentFrame preset="corners" seed={9} aspect={4 / 5} style={{ position: 'absolute', inset: 0 }} />
-  …
-</div>
 ```
 
 `<Ornament>` keeps its own proportions: give it a width and the height
-follows. `<OrnamentFrame>` fills whatever box it's in, so pass that box's
-width ÷ height as `aspect` and the frame is drawn to fit.
+follows.
 
-Both render on the server. React is an optional peer dependency: if you only
-use the core, you don't need it.
+### Without React
+
+```ts
+import { generateOrnament, fitFrame } from '@lauriparonen/alembic-ornaments'
+
+const { svg } = generateOrnament({ preset: 'garland', seed: 42 })
+element.innerHTML = svg
+
+const frame = fitFrame({ preset: 'corners', seed: 9, size: 32 }, box.clientWidth, box.clientHeight)
+```
+
+`svg` is a complete `<svg>` string with a `viewBox`. Scale it with CSS like
+any other image. React is an optional peer dependency: if you only use the
+core, you don't need it.
 
 ## Presets
 
@@ -70,25 +95,33 @@ on the seed, so you can reserve space before drawing anything.
 ## Frames
 
 <p>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-border-dark.svg"><img src="docs/frame-border-light.svg" width="160" alt="border frame"></picture>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-block-dark.svg"><img src="docs/frame-block-light.svg" width="160" alt="block frame"></picture>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-corners-dark.svg"><img src="docs/frame-corners-light.svg" width="160" alt="corners frame"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-border-dark.svg"><img src="docs/frame-border-light.svg" width="260" alt="border frame"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-block-dark.svg"><img src="docs/frame-block-light.svg" width="260" alt="block frame"></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/frame-corners-dark.svg"><img src="docs/frame-corners-light.svg" width="260" alt="corners frame"></picture>
 </p>
 
-```ts
-import { generateFrame } from '@lauriparonen/alembic-ornaments'
+`border`, `block` and `corners`, as `<Framed>` draws them round a 360×240
+card. Frames share flowers and leaves with the presets: the same seed gives
+the same family of motifs.
 
-const { svg } = generateFrame({ preset: 'border', seed: 4, scale: 1 }, 4 / 5)
+There are two ways to size one:
+
+- **In pixels**, for interfaces: `fitFrame(params, width, height)` takes a
+  `size` (the room it takes on each side) and draws to that box, however big.
+  This is what `<Framed>` uses.
+- **In proportion**, for print-like pages where the frame grows with the
+  page: `generateFrame(params, aspect)` takes a `scale` from
+  `FRAME_SCALE_MIN` (0.6) to `FRAME_SCALE_MAX` (1.6), relative to the box.
+
+```ts
+import { fitFrame, generateFrame } from '@lauriparonen/alembic-ornaments'
+
+const fitted = fitFrame({ preset: 'border', seed: 4, size: 32 }, 800, 600) // fitted.inset ≈ 32
+const proportional = generateFrame({ preset: 'border', seed: 4, scale: 1 }, 4 / 3)
 ```
 
-A frame is drawn to a box's proportions (the second argument, width ÷
-height). Frames share flowers and leaves with the presets: the same seed gives
-the same family of motifs. `scale` sets how heavy it is, from
-`FRAME_SCALE_MIN` (0.6) to `FRAME_SCALE_MAX` (1.6). It changes the weight, not
-the variation.
-
-To keep content clear of the frame, `frameInset` says how far in it has to
-start, as fractions of the box:
+To keep content clear of a proportional frame, `frameInset` says how far in
+it has to start, as fractions of the box:
 
 ```ts
 import { frameInset } from '@lauriparonen/alembic-ornaments'
@@ -97,6 +130,11 @@ const { x, y } = frameInset('border', 4 / 5)
 // x of the width on the left and right, y of the height top and bottom
 content.style.cssText = `position: absolute; inset: ${y * 100}% ${x * 100}%`
 ```
+
+By default content clears every bit of ink. A `corners` frame can also be
+told to clear only its edges (`frameInset(preset, aspect, scale, 'edges')`,
+or `clear="edges"` on `<Framed>`), which lets centred content sit in among
+the corner sprays.
 
 ## Storing ornaments
 
@@ -129,9 +167,10 @@ server and hydrate on the client, the React components handle this for you.
 | | |
 |---|---|
 | `generateOrnament(params)` | `{ params, svg, width, height }` for `{ preset, seed }`. Results are cached. |
-| `generateFrame(params, aspect)` | The same for a frame `{ preset, seed, scale? }`, drawn to `aspect` (width ÷ height). |
+| `fitFrame(params, width, height)` | A frame `{ preset, seed, size, clear? }` drawn to a box, taking `size` on each side. Adds `inset`: the room it actually takes. `null` for an empty box. |
+| `generateFrame(params, aspect)` | A frame `{ preset, seed, scale? }` drawn in proportion to a box of `aspect` (width ÷ height). |
 | `ornamentOutline(params)` | The ornament's ink as polygons in its own `width × height` box, for flowing text around it. |
-| `frameInset(preset, aspect, scale?)` | How far content must stay in from a frame's edges: `{ x, y }` as fractions of the box's width and height. |
+| `frameInset(preset, aspect, scale?, clear?)` | How far content must stay in from a proportional frame's edges: `{ x, y }` as fractions of the box's width and height. |
 | `normalizeParams(input)` | Coerces anything into valid `OrnamentParams`. |
 | `normalizeFrame(input)` | Coerces into valid `FrameParams`, or `null` for an unknown frame. |
 | `normalizeFrameScale(scale)` | Clamps a scale to the allowed range, in steps of 0.05. |
@@ -143,11 +182,17 @@ server and hydrate on the client, the React components handle this for you.
 
 | | |
 |---|---|
+| `<Framed preset seed size? clear? …divProps>` | A box with a frame fitted round its children, whatever its size. |
 | `<Ornament preset seed className? style? />` | An ornament at its natural proportions. |
-| `<OrnamentFrame preset seed scale? aspect className? style? />` | A frame that fills its box. |
+| `<OrnamentFrame preset seed scale? aspect className? style? />` | A proportional frame drawn to `aspect`, filling its box. |
 | `<OrnamentArt svg className? style? />` | Low-level: renders any generated SVG string, sized by its box. |
 
-All three render a `<div aria-hidden>`, since ornaments are decoration.
+The drawings render in a `<div aria-hidden>`, since ornaments are decoration.
+
+## Developing
+
+`npm run demo` serves a page with every component, resizable boxes and a
+size slider. `npm run test` runs the tests, drawing snapshots included.
 
 ## License
 

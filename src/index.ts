@@ -2,7 +2,7 @@ import { createRng } from './internal/rng.js'
 import { apply, clamp, type Vec } from './internal/geometry.js'
 import { composePreset, PRESETS, type OrnamentPreset, type PresetInfo, type Rect } from './internal/presets.js'
 import { render } from './internal/render.js'
-import { composeFrame, FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, type FramePreset } from './internal/frames.js'
+import { composeFrame, frameInset, FRAMES, FRAME_SCALE_MAX, FRAME_SCALE_MIN, type FrameClear, type FramePreset } from './internal/frames.js'
 
 /**
  * Seeded woodcut ornaments, drawn as SVG. Everything here is pure and has
@@ -95,7 +95,7 @@ export function ornamentOutline(input: Partial<OrnamentParams>): { polys: Vec[][
 
 /* ------------------------------------------------------------------ frames */
 
-export { FRAMES, frameInset, FRAME_SCALE_MIN, FRAME_SCALE_MAX, type FrameInfo, type FramePreset } from './internal/frames.js'
+export { FRAMES, frameInset, FRAME_SCALE_MIN, FRAME_SCALE_MAX, type FrameClear, type FrameInfo, type FramePreset } from './internal/frames.js'
 
 export interface FrameParams {
   preset: FramePreset
@@ -132,10 +132,63 @@ export function normalizeFrame(p: Partial<FrameParams> | null | undefined): Requ
  */
 export function generateFrame(input: FrameParams, aspect: number): Frame {
   const params = normalizeFrame(input) ?? { preset: 'border' as const, seed: 0, scale: 1 }
+  return drawFrame(params, aspect)
+}
+
+function drawFrame(params: Required<FrameParams>, aspect: number): Frame {
   const a = Math.round(aspect * 1000) / 1000
   const key = `frame:${params.preset}:${params.seed}:${a}:${params.scale}`
   return cached(key, () => {
     const rng = createRng(`frame:${params.preset}:${params.seed}`)
     return { params, ...render(composeFrame(params.preset, rng, a, params.scale), key) }
   })
+}
+
+/* ------------------------------------------------------------ fitted frames */
+
+export interface FitFrameParams {
+  preset: FramePreset
+  seed: number
+  /** Room the frame takes on each side, in the same units as the box (px, usually) */
+  size: number
+  /** What `size` keeps content clear of: all the ink (default), or only the edges (see frameInset) */
+  clear?: FrameClear
+}
+
+export interface FittedFrame extends Frame {
+  /**
+   * Room the frame actually takes on each side, in the box's units: a hair
+   * under the size asked for, or 30% of the box's shorter side if that's
+   * less, so a small box keeps some room inside. (A frame too light to
+   * draw, like 4px round a 20000px box, comes out at the lightest it can.)
+   */
+  inset: number
+}
+
+/** Lightest a fitted frame is drawn: past it the motifs get finer than a pixel on any screen */
+const FIT_SCALE_MIN = 0.04
+/** Most of the box's shorter side a fitted frame takes on each side, so some box is left inside */
+const FIT_MAX_SHARE = 0.3
+
+/**
+ * Draws a frame for a box of width × height that takes `size` on each
+ * side, however big the box is: a 300px card and a 1200px hero get the
+ * same weight of border, with more vine along the bigger one.
+ *
+ * The weight snaps down to steps of 2%, so a box being resized reuses
+ * drawings instead of growing a new one every pixel; the frame lands a
+ * hair inside `size`, never outside it.
+ */
+export function fitFrame(input: FitFrameParams, width: number, height: number): FittedFrame | null {
+  if (!(width > 0 && height > 0)) return null
+  const base = normalizeFrame({ preset: input.preset, seed: input.seed }) ?? { preset: 'border' as const, seed: 0, scale: 1 }
+  const size = Number(input.size)
+  if (!(size > 0)) return null
+  const aspect = width / height
+  // The inset grows in proportion to the weight, so one measurement at weight 1 gives the rest.
+  const unit = frameInset(base.preset, aspect, 1, input.clear).x * width
+  const room = Math.min(size, FIT_MAX_SHARE * Math.min(width, height))
+  const stepped = Math.round(Math.exp(Math.floor(Math.log(room / unit) * 50) / 50) * 1e6) / 1e6
+  const scale = Math.max(FIT_SCALE_MIN, stepped)
+  return { ...drawFrame({ ...base, scale }, aspect), inset: unit * scale }
 }

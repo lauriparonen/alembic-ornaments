@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { FRAMES, frameInset, generateFrame, generateOrnament, ornamentOutline, PRESETS } from '../src/index.js'
+import { fitFrame, FRAMES, frameInset, generateFrame, generateOrnament, ornamentOutline, PRESETS } from '../src/index.js'
 
 /**
  * Documents store an ornament as a preset and a seed, and redraw it on
@@ -42,7 +42,23 @@ describe('ornament drawings stay put', () => {
     expect(out).toMatchSnapshot()
   })
 
+  it('fitted frames', () => {
+    // Lighter and wider than Alembic draws: thin frames round big boxes, banners.
+    const out: Record<string, string> = {}
+    for (const f of FRAMES)
+      for (const seed of FRAME_SEEDS.slice(0, 4))
+        for (const [w, h] of [[360, 240], [1200, 800], [1200, 200], [300, 1800]])
+          out[`${f.id}:${seed}:${w}x${h}`] = hash(fitFrame({ preset: f.id, seed, size: 32 }, w, h)!.svg)
+    expect(out).toMatchSnapshot()
+  })
+
   it('frame insets', () => {
+    const out: Record<string, { x: number; y: number }> = {}
+    for (const f of FRAMES) for (const aspect of ASPECTS) for (const scale of SCALES) out[`${f.id}:${aspect.toFixed(3)}:${scale}`] = frameInset(f.id, aspect, scale, 'edges')
+    expect(out).toMatchSnapshot()
+  })
+
+  it('frame insets that clear all the ink', () => {
     const out: Record<string, { x: number; y: number }> = {}
     for (const f of FRAMES) for (const aspect of ASPECTS) for (const scale of SCALES) out[`${f.id}:${aspect.toFixed(3)}:${scale}`] = frameInset(f.id, aspect, scale)
     expect(out).toMatchSnapshot()

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>alembic-ornaments demo</title>
+    <style>
+      :root { color-scheme: light dark; --paper: #f6f1e7; --ink: #2b2620; --muted: #7a7266; }
+      @media (prefers-color-scheme: dark) { :root { --paper: #1c1a17; --ink: #e6dfd2; --muted: #9a9284; } }
+      body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 Georgia, serif; }
+      main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 80px; }
+      h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+      h2 { font-weight: normal; font-size: 19px; margin: 40px 0 12px; }
+      p.note { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+      .controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; font: 14px system-ui, sans-serif; margin: 16px 0 8px; }
+      .resizable { resize: both; overflow: hidden; min-width: 120px; min-height: 80px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

@@ -29,6 +29,9 @@ export const FRAMES: FrameInfo[] = [
 /** Frame units: at scale 1, the shorter side is this long. */
 const M = 500
 
+/** Longest side ÷ shortest a frame is drawn to; beyond it, it's drawn at this and letterboxed */
+const ASPECT_LIMIT = 12
+
 /** How heavy a frame can be set, relative to its natural size */
 export const FRAME_SCALE_MIN = 0.6
 export const FRAME_SCALE_MAX = 1.6
@@ -40,32 +43,45 @@ export const FRAME_SCALE_MAX = 1.6
  * all in proportion.
  */
 export function frameSize(aspect: number, scale = 1): { W: number; H: number } {
-  const a = Math.min(3, Math.max(1 / 3, aspect || 1))
+  const a = Math.min(ASPECT_LIMIT, Math.max(1 / ASPECT_LIMIT, aspect || 1))
   const short = M / scale
   return a >= 1 ? { W: short * a, H: short } : { W: short, H: short / a }
 }
 
-/** How a frame's parts sit: outer margin, band depth, and how far text must stay in. */
+/**
+ * How a frame's parts sit: outer margin, band depth, and how far content
+ * must stay in: past the bands and arms along the edges (`edges`), or past
+ * every bit of ink, corner sprays included (`ink`). Only corners differ.
+ */
 function metrics(preset: FramePreset) {
+  const breath = M * 0.04
   if (preset === 'corners') {
     const ri = M * 0.045
-    return { o: ri, D: M * 0.2, clear: ri + M * 0.075 }
+    const D = M * 0.2
+    return { o: ri, D, edges: ri + M * 0.075, ink: ri + D + breath }
   }
   const o = M * 0.035
   const D = M * 0.1
-  return { o, D, clear: o + D + M * 0.04 }
+  return { o, D, edges: o + D + breath, ink: o + D + breath }
 }
+
+/** Whether content clears every bit of a frame, or only what runs along its edges */
+export type FrameClear = 'ink' | 'edges'
 
 /**
  * How far in from each edge content has to start to clear a frame, as
  * fractions of the box: x of its width (left and right), y of its height
  * (top and bottom). The distance is the same on all four sides, so for a
  * box w × h, x·w === y·h.
+ *
+ * `ink` (the default) clears all of it. `edges` lets content run in among
+ * the corner sprays of a `corners` frame, which suits centred content;
+ * for the other frames the two are the same.
  */
-export function frameInset(preset: FramePreset, aspect: number, scale = 1): { x: number; y: number } {
+export function frameInset(preset: FramePreset, aspect: number, scale = 1, clear: FrameClear = 'ink'): { x: number; y: number } {
   const { W, H } = frameSize(aspect, scale)
-  const { clear } = metrics(preset)
-  return { x: clear / W, y: clear / H }
+  const d = metrics(preset)[clear === 'edges' ? 'edges' : 'ink']
+  return { x: d / W, y: d / H }
 }
 
 /* ------------------------------------------------------------------ bands */
@@ -169,7 +185,10 @@ function corners(rng: Rng, ch: Character, aspect: number, scale: number): Compos
   const { o: ri } = metrics('corners')
   const hw = 0.6
   const depth = M * 0.2
-  const reach = Math.min(W, H) * 0.42
+  // The arm follows the page, but its flowers and leaves don't: past the
+  // lightest proportional weight it would only get longer and barer, so
+  // lighter frames (a thin frame round a big box) keep their sprays tight.
+  const reach = Math.min(W, H, M / FRAME_SCALE_MIN) * 0.42
   const w = M * 0.0075
   const gap = M * 0.0075
   const edge = ri + hw + gap
