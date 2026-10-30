@@ -1,0 +1,73 @@
+{
+  "name": "@lauriparonen/alembic-ornaments",
+  "version": "0.1.0",
+  "description": "Seeded woodcut ornaments and frames, drawn as SVG. Same seed, same flourish.",
+  "keywords": [
+    "ornament",
+    "svg",
+    "generative",
+    "procedural",
+    "typography",
+    "fleuron",
+    "woodcut",
+    "react"
+  ],
+  "license": "MIT",
+  "author": "Lauri Paronen",
+  "homepage": "https://github.com/lauriparonen/alembic-ornaments#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lauriparonen/alembic-ornaments.git"
+  },
+  "bugs": "https://github.com/lauriparonen/alembic-ornaments/issues",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint:package": "publint && attw --pack . --profile esm-only",
+    "prepublishOnly": "npm run typecheck && npm run test:run && npm run build && npm run lint:package",
+    "readme:images": "npm run build && node scripts/readme-images.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "jsdom": "^30.1.3",
+    "publint": "^0.3.25",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
